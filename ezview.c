@@ -45,27 +45,57 @@ static void error_callback(int error, const char* description){
     fprintf(stderr, "Error: %s\n", description);
 }
 
+void print_mat4x4(mat4x4 m){
+	for (int i = 0; i < 4; i++){
+		for (int j = 0; j < 4; j++){
+			printf("%lf ", m[i][j]);
+		}
+		printf("\n");
+	}
+}
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
 	if (action == GLFW_PRESS){
+		mat4x4 transform;
+		mat4x4_identity(transform);
 		switch(key){
 		case GLFW_KEY_ESCAPE:
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 			break;
 		case GLFW_KEY_UP:
-			mat4x4_scale(m, m, 2);
+			transform[0][0] = 2;
+			transform[1][1] = 2;
 			break;
 		case GLFW_KEY_DOWN:
-			mat4x4_scale(m, m, 0.5);
+			transform[0][0] = 0.5;
+			transform[1][1] = 0.5;
 			break;
 		case GLFW_KEY_P:
-			for (int i = 0; i < 4; i++){
-				for (int j = 0; j < 4; j++){
-					printf("%lf ", m[i][j]);
-				}
-				printf("\n");
-			}
+			break;
+		case GLFW_KEY_RIGHT:
+			mat4x4_rotate_Z(transform, transform, (float) -M_PI/12);
+			break;
+		case GLFW_KEY_LEFT:
+			mat4x4_rotate_Z(transform, transform, (float) M_PI/12);
+			break;
+		case GLFW_KEY_H:
+			transform[0][3] = -0.1;
+			break;
+		case GLFW_KEY_L:
+			transform[0][3] = 0.1;
+			break;
+		case GLFW_KEY_J:
+			transform[1][3] = 0.1;
+			break;
+		case GLFW_KEY_K:
+			transform[1][3] = -0.1;
 			break;
 		}
+		mat4x4_mul(m, transform, m);
+		
+		printf("\n");
+		print_mat4x4(m);
+		
 	}
 }
 
@@ -215,16 +245,17 @@ int main(void)
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //mat4x4_rotate_Z(m, m, (float) 0.01);
         mat4x4_dup(mvp, m);
+		//mat4x4_transpose(mvp, mvp);
 		/*
 		for (int i = 0; i < 4; i++){
 			for (int j = 0; j < 4; j++){
-				printf("%lf ", mvp[i][j]);
+				printf("%f ", mvp[i][j]);
 			}
 			printf("\n");
 		}
 		*/
+		
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
         glDrawArrays(GL_TRIANGLES, 0, 3);
