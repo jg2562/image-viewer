@@ -23,7 +23,6 @@ clean:
 	rm -f $(INPUT_LOC)/*#
 	rm -f *.o
 	rm -f *~
-	rm -f *.ppm
 	rm -f *.stackdump
 	rm -f *#
 

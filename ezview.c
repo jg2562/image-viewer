@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include "ppmrw.h"
 
 typedef struct {
   float Position[2];
@@ -15,13 +16,13 @@ typedef struct {
 // (-1, -1) (1, -1)
 
 Vertex vertexes[] = {
-  {{1, -1}, {0.99999, 0}},
-  {{1, 1},  {0.99999, 0.99999}},
-  {{-1, 1}, {0, 0.99999}},
+  {{1, -1}, {0.99999, 0.99999}},
+  {{1, 1},  {0.99999, 0}},
+  {{-1, 1}, {0, 0}},
   
-  {{1, -1}, {0.99999, 0}},
-  {{-1, 1}, {0, 0.99999}},
-  {{-1, -1}, {0, 0}}
+  {{1, -1}, {0.99999, 0.99999}},
+  {{-1, 1}, {0, 0}},
+  {{-1, -1}, {0, 0.99999}}
 };
 
 static const char* vertex_shader_text =
@@ -52,7 +53,7 @@ static void error_callback(int error, const char* description){
 void print_mat4x4(mat4x4 m){
 	for (int i = 0; i < 4; i++){
 		for (int j = 0; j < 4; j++){
-			printf("%lf ", m[i][j]);
+			printf("%lf ", m[j][i]);
 		}
 		printf("\n");
 	}
@@ -83,16 +84,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			mat4x4_rotate_Z(transform, transform, (float) M_PI/12);
 			break;
 		case GLFW_KEY_H:
-			transform[0][3] = -0.1;
+			transform[3][0] = -0.1;
 			break;
 		case GLFW_KEY_L:
-			transform[0][3] = 0.1;
+			transform[3][0] = 0.1;
 			break;
 		case GLFW_KEY_J:
-			transform[1][3] = 0.1;
+			transform[3][1] = 0.1;
 			break;
 		case GLFW_KEY_K:
-			transform[1][3] = -0.1;
+			transform[3][1] = -0.1;
 			break;
 		case GLFW_KEY_S:
 			transform[0][1] = -0.1;
@@ -134,6 +135,7 @@ void glCompileShaderOrDie(GLuint shader) {
   }
 }
 
+/*
 // 4 x 4 image..
 unsigned char image[] = {
   255, 0, 0, 255,
@@ -156,9 +158,33 @@ unsigned char image[] = {
   255, 0, 255, 255,
   255, 0, 255, 255
 };
-
+*/
 int main(void)
 {
+	char* file = "image.ppm";
+	
+	FILE* fh = fopen(file, "rb");
+
+	if (fh == NULL){
+		fprintf(stderr, "Error: Couldn't open file for reading.\n");
+		exit(1);
+	}
+	
+	printf("Loading Image...");
+	Image img;
+	read_file(fh, &img);
+	
+	unsigned char image[img.height * img.width * 4];
+	
+	for (int i = 0; i < img.height * img.width; i++){
+		Pixel pix = img.buffer[i];
+		image[i * 4] = pix.r;
+		image[i * 4 + 1] = pix.g;
+		image[i * 4 + 2] = pix.b;
+		image[i * 4 + 3] = 255;
+	}
+
+	printf("Done!\n");
     GLFWwindow* window;
     GLuint vertex_buffer, vertex_shader, fragment_shader, program;
     GLint mvp_location, vpos_location, vcol_location;
@@ -232,8 +258,6 @@ int main(void)
                           sizeof(Vertex),
 			  (void*) (sizeof(float) * 2));
     
-    int image_width = 4;
-    int image_height = 4;
 
     GLuint texID;
     glGenTextures(1, &texID);
@@ -241,8 +265,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, 
-		 GL_UNSIGNED_BYTE, image);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texID);
