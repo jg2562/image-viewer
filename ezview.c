@@ -17,7 +17,11 @@ typedef struct {
 Vertex vertexes[] = {
   {{1, -1}, {0.99999, 0}},
   {{1, 1},  {0.99999, 0.99999}},
-  {{-1, 1}, {0, 0.99999}}
+  {{-1, 1}, {0, 0.99999}},
+  
+  {{1, -1}, {0.99999, 0}},
+  {{-1, 1}, {0, 0.99999}},
+  {{-1, -1}, {0, 0}}
 };
 
 static const char* vertex_shader_text =
@@ -90,6 +94,18 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		case GLFW_KEY_K:
 			transform[1][3] = -0.1;
 			break;
+		case GLFW_KEY_S:
+			transform[0][1] = -0.1;
+			break;
+		case GLFW_KEY_W:
+			transform[0][1] = 0.1;
+			break;
+		case GLFW_KEY_A:
+			transform[1][0] = -0.1;
+			break;
+		case GLFW_KEY_D:
+			transform[1][0] = 0.1;
+			break;
 		}
 		mat4x4_mul(m, transform, m);
 		
@@ -152,7 +168,7 @@ int main(void)
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
@@ -258,7 +274,7 @@ int main(void)
 		
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
