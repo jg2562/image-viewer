@@ -1,6 +1,6 @@
 #include <GLFW/glfw3.h>
 
-#include "./glfw-3.2.1/deps/linmath.h"
+#include "linmath.h"
 
 #include <stdlib.h>
 #include <stdio.h>
