@@ -45,6 +45,10 @@ static const char* fragment_shader_text =
 "}\n";
 
 static mat4x4 m;
+static mat4x4 temp;
+static double rotate;
+static double scale_up = 1;
+static double scale_down = 0.5;
 
 static void error_callback(int error, const char* description){
     fprintf(stderr, "Error: %s\n", description);
@@ -68,12 +72,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 			break;
 		case GLFW_KEY_UP:
-			transform[0][0] = 2;
-			transform[1][1] = 2;
+			transform[0][0] = 1.25;
+			transform[1][1] = 1.25;
 			break;
 		case GLFW_KEY_DOWN:
-			transform[0][0] = 0.5;
-			transform[1][1] = 0.5;
+			transform[0][0] = 0.75;
+			transform[1][1] = 0.75;
 			break;
 		case GLFW_KEY_P:
 			break;
@@ -84,28 +88,45 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			mat4x4_rotate_Z(transform, transform, (float) M_PI/12);
 			break;
 		case GLFW_KEY_H:
-			transform[3][0] = -0.1;
+			transform[3][0] = -0.125;
 			break;
 		case GLFW_KEY_L:
-			transform[3][0] = 0.1;
+			transform[3][0] = 0.125;
 			break;
 		case GLFW_KEY_J:
-			transform[3][1] = 0.1;
+			transform[3][1] = 0.125;
 			break;
 		case GLFW_KEY_K:
-			transform[3][1] = -0.1;
+			transform[3][1] = -0.125;
 			break;
 		case GLFW_KEY_S:
-			transform[0][1] = -0.1;
+			transform[0][1] = -0.125;
 			break;
 		case GLFW_KEY_W:
-			transform[0][1] = 0.1;
+			transform[0][1] = 0.125;
 			break;
 		case GLFW_KEY_A:
-			transform[1][0] = -0.1;
+			transform[1][0] = -0.125;
 			break;
 		case GLFW_KEY_D:
-			transform[1][0] = 0.1;
+			transform[1][0] = 0.125;
+			break;
+		case GLFW_KEY_EQUAL:
+			mat4x4_dup(temp, m);
+			scale_up = 0;
+			break;
+		case GLFW_KEY_MINUS:
+			mat4x4_dup(temp, m);
+			scale_down = 1;
+			break;
+		case GLFW_KEY_9:
+			rotate = 90;
+			break;
+		case GLFW_KEY_0:
+			rotate = -90;
+			break;
+		case GLFW_KEY_R:
+			mat4x4_identity(m);
 			break;
 		}
 		mat4x4_mul(m, transform, m);
@@ -284,6 +305,32 @@ int main(void)
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
+		if (rotate != 0){
+			float sign = rotate/ abs(rotate);
+			rotate -= 10 * sign;
+			mat4x4_rotate_Z(m, m, (float) sign * M_PI/180 * 10);
+		}
+		
+		if (scale_up < 1){
+			
+			scale_up += 0.0625;
+			mat4x4 p;
+			mat4x4_identity(p);
+			p[0][0] = 1 + scale_up;
+			p[1][1] = 1 + scale_up;
+			mat4x4_mul(m, temp, p);
+		}
+
+		if (scale_down > 0.5){
+			
+			scale_down -= 0.03125;
+			mat4x4 p;
+			mat4x4_identity(p);
+			p[0][0] = scale_down;
+			p[1][1] = scale_down;
+			mat4x4_mul(m, temp, p);
+		}
+		
         mat4x4_dup(mvp, m);
 		//mat4x4_transpose(mvp, mvp);
 		/*
