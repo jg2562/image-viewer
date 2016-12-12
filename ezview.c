@@ -130,10 +130,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			break;
 		}
 		mat4x4_mul(m, transform, m);
-		
-		printf("\n");
-		print_mat4x4(m);
-		
 	}
 }
 
@@ -156,42 +152,39 @@ void glCompileShaderOrDie(GLuint shader) {
   }
 }
 
-/*
-// 4 x 4 image..
-unsigned char image[] = {
-  255, 0, 0, 255,
-  255, 0, 0, 255,
-  255, 0, 0, 255,
-  255, 0, 0, 255,
+void glLinkProgramOrDie(GLuint program) {
+  GLint linked;
+  glLinkProgram(program);
+  glGetShaderiv(program,
+		GL_LINK_STATUS,
+		&linked);
+  if (!linked) {
+    GLint infoLen = 0;
+    glGetShaderiv(program,
+		  GL_INFO_LOG_LENGTH,
+		  &infoLen);
+    char* info = malloc(infoLen+1);
+    GLint done;
+    glGetShaderInfoLog(program, infoLen, &done, info);
+    printf("Unable to compile shader: %s\n", info);
+    exit(1);
+  }
+}
 
-  0, 255, 0, 255,
-  0, 255, 0, 255,
-  0, 255, 0, 255,
-  0, 255, 0, 255,
-
-  0, 0, 255, 255,
-  0, 0, 255, 255,
-  0, 0, 255, 255,
-  0, 0, 255, 255,
-
-  255, 0, 255, 255,
-  255, 0, 255, 255,
-  255, 0, 255, 255,
-  255, 0, 255, 255
-};
-*/
-int main(void)
-{
-	char* file = "image.ppm";
-	
-	FILE* fh = fopen(file, "rb");
+int main(int argc, char* argv){
+	if (argc != 2){
+		fprintf(stderr, "Non proper usage of ezview\n");
+		printf("Proper Usage: ezview image.ppm\n");
+		exit(1);
+	}
+	printf("%s\n", argv[1]);
+	FILE* fh = fopen(argv[1], "rb");
 
 	if (fh == NULL){
 		fprintf(stderr, "Error: Couldn't open file for reading.\n");
 		exit(1);
 	}
 	
-	printf("Loading Image...");
 	Image img;
 	read_file(fh, &img);
 	
@@ -205,7 +198,6 @@ int main(void)
 		image[i * 4 + 3] = 255;
 	}
 
-	printf("Done!\n");
     GLFWwindow* window;
     GLuint vertex_buffer, vertex_shader, fragment_shader, program;
     GLint mvp_location, vpos_location, vcol_location;
@@ -228,7 +220,6 @@ int main(void)
     glfwSetKeyCallback(window, key_callback);
 
     glfwMakeContextCurrent(window);
-    // gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
     glfwSwapInterval(1);
 
     // NOTE: OpenGL error checks have been omitted for brevity
@@ -248,8 +239,7 @@ int main(void)
     program = glCreateProgram();
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-    // more error checking! glLinkProgramOrDie!
+	glLinkProgramOrDie(program);
 
     mvp_location = glGetUniformLocation(program, "MVP");
     assert(mvp_location != -1);
